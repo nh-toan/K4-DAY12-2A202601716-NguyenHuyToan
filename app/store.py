@@ -18,6 +18,11 @@ HISTORY_MAX_MESSAGES = 12
 HISTORY_TTL_SECONDS = 3 * 24 * 3600
 
 
+class UnavailableRedis:
+    def ping(self) -> bool:
+        return False
+
+
 def get_redis_client(url: str | None = None):
     """CHO SẴN — tạo client Redis từ URL.
 
@@ -26,6 +31,8 @@ def get_redis_client(url: str | None = None):
     trong process, đúng cái mà CP4 đang tìm cách loại bỏ.
     """
     url = url or get_settings().redis_url
+    if not url:
+        return UnavailableRedis()
     if url.startswith("fake://"):
         import fakeredis
 
