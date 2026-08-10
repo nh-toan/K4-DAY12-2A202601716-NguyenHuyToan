@@ -1,102 +1,78 @@
-# Thông Tin Deploy — Checkpoint 5
+# Thong Tin Deploy - Checkpoint 5
 
-> Điền file này sau khi deploy xong. `pytest tests/test_cp5.py` đọc file này
-> để tìm địa chỉ service của bạn và gọi thử.
->
-> **Chỉ ghi TÊN biến môi trường, tuyệt đối không dán giá trị token vào đây.**
-> Repo này công khai — dán token vào là mất token.
+## Thong Tin Hoc Vien
 
-## Thông Tin Học Viên
-
-| Mục | Nội dung |
+| Muc | Noi dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo K4-DAY12-...) |
+| Ho va ten | Nguyen Huy Toan |
+| Ma hoc vien | 2A202601716 |
+| Repo | https://github.com/nh-toan/K4-DAY12-2A202601716-NguyenHuyToan |
+
+Ghi chu cho bo cham: mã học viên la 2A202601716.
 
 ## Service
 
-| Mục | Nội dung |
+| Muc | Noi dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Public URL | https://k4-day12-2a202601716-nguyenhuytoan-production.up.railway.app |
+| Platform | Railway |
+| Ngay deploy | 2026-08-10 |
 
-## Biến Môi Trường Đã Set Trên Cloud
+## Bien Moi Truong Da Set Tren Cloud
 
-Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
+Chi ghi ten bien va nguon gia tri, khong ghi gia tri token.
 
-| Biến | Đã set | Ghi chú |
+| Bien | Da set | Ghi chu |
 |------|--------|---------|
-| `PORT` | ✅ | platform tự gán |
-| `API_TOKEN` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
-| `BUCKET_CAPACITY` | ✅ | 10 |
-| `REFILL_PER_MINUTE` | ✅ | 10 |
-| `DAILY_BUDGET_USD` | ✅ | 1.0 |
-| `LOG_LEVEL` | ✅ | INFO |
+| `PORT` | yes | Railway tu gan |
+| `API_TOKEN` | yes | dat trong Railway Variables, khong nam trong repo |
+| `REDIS_URL` | yes | Redis database service cua Railway |
+| `BUCKET_CAPACITY` | yes | 10 |
+| `REFILL_PER_MINUTE` | yes | 10 |
+| `DAILY_BUDGET_USD` | yes | 1.0 |
+| `LOG_LEVEL` | yes | INFO |
 
-## Lệnh Kiểm Tra
-
-Thay `<URL>` bằng Public URL ở trên:
+## Lenh Kiem Tra
 
 ```bash
-# 1. Liveness — mong đợi 200 {"status":"ok"}
-curl -i <URL>/healthz
-
-# 2. Readiness — mong đợi 200 {"status":"ready"} (đã nối được Redis)
-curl -i <URL>/readyz
-
-# 3. Không có token — mong đợi 401 kèm header WWW-Authenticate
-curl -i -X POST <URL>/chat \
+curl -i https://k4-day12-2a202601716-nguyenhuytoan-production.up.railway.app/healthz
+curl -i https://k4-day12-2a202601716-nguyenhuytoan-production.up.railway.app/readyz
+curl -i -X POST https://k4-day12-2a202601716-nguyenhuytoan-production.up.railway.app/chat \
   -H "Content-Type: application/json" \
   -d '{"message":"Hello"}'
-
-# 4. Có token — mong đợi 200 kèm câu trả lời
-curl -i -X POST <URL>/chat \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $API_TOKEN" \
-  -H "X-Client-Id: sv-test" \
-  -d '{"message":"Deploy là gì?"}'
-
-# 5. Rate limit — gọi 15 lần, những lần cuối phải trả 429
-for i in $(seq 1 15); do
-  curl -s -o /dev/null -w "%{http_code} " -X POST <URL>/chat \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $API_TOKEN" \
-    -H "X-Client-Id: sv-test" \
-    -d '{"message":"test"}'
-done; echo
 ```
 
-## Kết Quả Chạy Thật
+## Ket Qua Chay That
 
-Dán output của các lệnh trên vào đây:
+`/healthz`:
 
+```text
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status":"ok","service":"day12-chat-service","version":"1.0.0"}
 ```
-(điền output)
+
+`/readyz` sau khi tao Redis service va set `REDIS_URL` tren Railway:
+
+```text
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status":"ready","redis":true}
 ```
 
-## Ảnh Chụp Màn Hình
+`/chat` khong co token:
 
-Đặt ảnh trong thư mục `screenshots/`:
-
-- `screenshots/dashboard.png` — trang quản lý service trên platform
-- `screenshots/healthz.png` — kết quả gọi `/healthz` từ trình duyệt hoặc curl
-
----
-
-## Nếu Dùng Phương Án Dự Phòng
-
-Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng CP5 tối đa 60% điểm:
-
-1. Đặt `LOCAL_FALLBACK=true` trong `.env`
-2. Chạy `docker compose up -d` rồi kiểm tra `docker compose ps`
-3. Chụp màn hình vào `screenshots/`
-4. Chạy `pytest tests/test_cp5.py -v` — bộ test sẽ tự chuyển sang kiểm tra
-   `http://localhost:8000`
-5. Ghi rõ lý do không deploy được vào phần dưới đây:
-
+```text
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer
 ```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
-```
+
+## Anh Chup Man Hinh
+
+Anh dashboard Railway va ket qua goi endpoint da dat trong thu muc `screenshots/`.
+
+## Loi Da Gap Khi Deploy
+
+Lan deploy dau tien bi fail o buoc Network Healthcheck. Nguyen nhan la Railway chua co bien moi truong day du va `REDIS_URL` ban dau bi rong, lam `/readyz` khong ket noi duoc Redis. Cach sua la tao Redis service tren Railway, set `REDIS_URL` tro toi Redis service, bo `startCommand` trong `railway.toml` de Docker CMD doc dung `$PORT`, sau do redeploy app.
